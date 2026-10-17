@@ -1,0 +1,57 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential autoconf automake libtool pkg-config \
+            cmake zlib1g-dev libffi-dev libssl-dev openjdk-17-jdk \
+            unzip zip lld
+
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --upgrade pip
+          pip install "cython<3.0.0"
+          pip install git+https://github.com
+
+      - name: Create working Buildozer config
+        run: |
+          buildozer init
+          # Тонкая настройка под твой код
+          sed -i 's/^title =.*/title = CataCase/' buildozer.spec
+          sed -i 's/^package.name =.*/package.name = catacase/' buildozer.spec
+          sed -i 's/^package.domain =.*/package.domain = org.catacase/' buildozer.spec
+          sed -i 's/^source.include_exts =.*/source.include_exts = py,png,jpg,kv,json/' buildozer.spec
+          sed -i 's/^requirements =.*/requirements = python3==3.11.9,kivy==2.3.0,hostpython3==3.11.9/' buildozer.spec
+          sed -i 's/#\?android.api =.*/android.api = 33/' buildozer.spec
+          sed -i 's/#\?android.ndk =.*/android.ndk = 25b/' buildozer.spec
+          sed -i 's/#\?android.accept_sdk_license =.*/android.accept_sdk_license = txt/' buildozer.spec
+
+      - name: Build APK with Buildozer
+        run: |
+          export BUILDOZER_ALLOW_KIVY_NEW_DESIGN=1
+          buildozer android debug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CataCase-APK
+          path: bin/*.apk
