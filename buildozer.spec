@@ -1,0 +1,22 @@
+name: Build APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Build
+      run: |
+        sudo apt-get update && sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libreoffice-dev libvorbis-dev libogg-dev
+        pip install --upgrade pip cython virtualenv buildozer
+        export PATH=$PATH:~/.local/bin && yes | buildozer android debug
+    - uses: actions/upload-artifact@v4
+      with:
+        name: my-game-apk
+        path: bin/*.apk
