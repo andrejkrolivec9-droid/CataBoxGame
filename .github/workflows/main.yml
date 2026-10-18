@@ -5,42 +5,15 @@ on:
 
 jobs:
   apk:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
-      - uses: actions/setup-python@v5
+
+      - name: Build with Buildozer Action
+        uses: ArtemGovorov/buildozer-action@v1
         with:
-          python-version: '3.11'
-          
-      - name: Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential autoconf libtool pkg-config cmake zlib1g-dev libffi-dev libssl-dev openjdk-17-jdk unzip zip lld
-          pip install --upgrade pip --break-system-packages
-          pip install "cython<3.0.0" buildozer --break-system-packages
-          
-      - name: Build
-        run: |
-          # 1. Сначала генерируем дефолтный конфиг
-          buildozer init
-          
-          # 2. Жестко фиксируем проверенные стабильные версии Android API
-          sed -i 's/^requirements =.*/requirements = python3==3.11.9,kivy==2.3.0,hostpython3==3.11.9/' buildozer.spec
-          sed -i 's/#\?android.api =.*/android.api = 33/' buildozer.spec
-          sed -i 's/#\?android.ndk =.*/android.ndk = 25b/' buildozer.spec
-          sed -i 's/#\?android.accept_sdk_license =.*/android.accept_sdk_license = txt/' buildozer.spec
-          
-          # 3. Хак: Создаем файлы лицензий Google ЗАРАНЕЕ вручную, чтобы Билдозер даже не пытался их спрашивать
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
-          echo -e "\n244d24e21dade24697355c3114b2e3a87d6e02ac" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          echo -e "\n84831b9409646a547e31e3eff4661b76b2f90225" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
-          
-          # 4. Запускаем сборку
-          export BUILDOZER_ALLOW_KIVY_NEW_DESIGN=1
-          buildozer android debug
+          command: buildozer android debug
+          repository_root: .
           
       - uses: actions/upload-artifact@v4
         with:
