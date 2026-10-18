@@ -17,13 +17,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf libtool pkg-config cmake zlib1g-dev libffi-dev libssl-dev openjdk-17-jdk unzip zip lld
-          pip install --upgrade pip
-          pip install "cython<3.0.0" buildozer
+          pip install --upgrade pip --break-system-packages
+          pip install "cython<3.0.0" buildozer --break-system-packages
           
       - name: Build
         run: |
           buildozer init
           sed -i 's/^requirements =.*/requirements = python3==3.11.9,kivy==2.3.0,hostpython3==3.11.9/' buildozer.spec
+          sed -i 's/#\?android.api =.*/android.api = 33/' buildozer.spec
+          sed -i 's/#\?android.ndk =.*/android.ndk = 25b/' buildozer.spec
+          sed -i 's/#\?android.accept_sdk_license =.*/android.accept_sdk_license = txt/' buildozer.spec
+          
+          mkdir -p ~/.android && touch ~/.android/repositories.cfg
+          export ANDROID_HOME=/home/runner/.buildozer/android/platform/android-sdk
+          yes | /home/runner/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses || true
+          
           export BUILDOZER_ALLOW_KIVY_NEW_DESIGN=1
           buildozer android debug
           
