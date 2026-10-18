@@ -22,22 +22,18 @@ jobs:
           
       - name: Build
         run: |
-          # 1. Генерируем дефолтный конфиг
           buildozer init
-          
-          # 2. ХАК: Вырезаем проверку лицензий прямо из кода установленного Билдозера
-          BDOZER_DIR=$(python3 -c "import buildozer; print(buildozer.__path__[0])")
-          sed -i 's/self.sdkmanager([^)]*)/# Отключено хаком/g' "$BDOZER_DIR/targets/android.py"
-          sed -i 's/self.check_action([^)]*)/# Отключено хаком/g' "$BDOZER_DIR/targets/android.py"
-          
-          # 3. Фиксируем стабильные версии
           sed -i 's/^requirements =.*/requirements = python3==3.11.9,kivy==2.3.0,hostpython3==3.11.9/' buildozer.spec
           sed -i 's/#\?android.api =.*/android.api = 33/' buildozer.spec
           sed -i 's/#\?android.ndk =.*/android.ndk = 25b/' buildozer.spec
           
-          # 4. Запускаем
+          # Принудительно создаем файл согласия со всеми лицензиями
+          mkdir -p /home/runner/.android
+          touch /home/runner/.android/repositories.cfg
+          
           export BUILDOZER_ALLOW_KIVY_NEW_DESIGN=1
-          buildozer android debug
+          # Запуск сборки в автоматическом режиме без вопросов
+          yes | buildozer android debug
           
       - uses: actions/upload-artifact@v4
         with:
