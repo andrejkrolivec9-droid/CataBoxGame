@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf libtool pkg-config cmake zlib1g-dev libffi-dev libssl-dev openjdk-17-jdk unzip zip lld
+          pip install --upgrade pip
+          pip install "cython<3.0.0" buildozer
+          
+      - name: Build
+        run: |
+          buildozer init
+          sed -i 's/^requirements =.*/requirements = python3==3.11.9,kivy==2.3.0,hostpython3==3.11.9/' buildozer.spec
+          export BUILDOZER_ALLOW_KIVY_NEW_DESIGN=1
+          buildozer android debug
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: bin/*.apk
