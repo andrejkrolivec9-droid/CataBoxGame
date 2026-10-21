@@ -32,6 +32,59 @@ jobs:
       - name: Prepare main.py
         run: '[ -f main.py ] || cp Desktop-7.py main.py'
 
+      - name: Use fixed debug key
+        run: |
+          mkdir -p ~/.android
+          base64 -d > ~/.android/debug.keystore << 'EOF'
+          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
+          EOF
+
       - name: Build APK
         run: buildozer -v android debug
 
