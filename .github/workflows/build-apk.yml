@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - master
+    paths-ignore:
+      - 'signing/**'
 
 jobs:
   build:
@@ -60,29 +62,20 @@ jobs:
           fi
           grep -E '^[[:space:]]*(package\.name|package\.domain|version|android\.release_artifact|android\.debug_artifact)[[:space:]]*=' buildozer.spec || true
 
-      - name: Decode keystore (if provided)
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Check keystore
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/release.keystore"
-            echo "Keystore decoded"
-          else
-            echo "No keystore secret, APK will be unsigned"
+          if [ ! -f signing/catabox-release.keystore ]; then
+            echo "ERROR: signing/catabox-release.keystore not found. Run 'Create keystore' first."
+            exit 1
           fi
 
-      - name: Build release APK
+      - name: Build signed release APK
         env:
-          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/signing/catabox-release.keystore
+          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.SIGN_PASSWORD }}
+          P4A_RELEASE_KEYALIAS: catabox
+          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.SIGN_PASSWORD }}
         run: |
-          if [ -f "$GITHUB_WORKSPACE/release.keystore" ]; then
-            export P4A_RELEASE_KEYSTORE="$GITHUB_WORKSPACE/release.keystore"
-            export P4A_RELEASE_KEYSTORE_PASSWD="$KS_PASS"
-            export P4A_RELEASE_KEYALIAS="$KEY_ALIAS"
-            export P4A_RELEASE_KEYALIAS_PASSWD="$KEY_PASS"
-          fi
           buildozer -v android release
 
       - name: Show generated APK files
@@ -90,6 +83,13 @@ jobs:
         run: |
           echo "Files in bin/:"
           ls -lah bin/ || true
+
+      - name: Fail if APK is unsigned
+        run: |
+          if ls bin/*unsigned* 1>/dev/null 2>&1; then
+            echo "ERROR: APK is unsigned"
+            exit 1
+          fi
 
       - name: Upload APK artifacts
         if: success()
