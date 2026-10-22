@@ -1,24 +1,29 @@
 [app]
+
 title = CataBox
 package.name = catabox
 package.domain = org.catabox
+
 source.dir = .
-source.include_exts = py,png,jpg,jpeg,wav,json,kv
-source.exclude_dirs = .github,bin,.buildozer
+source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,txt,db
+
 version = 0.1
-requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0
+
+requirements = python3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
+
 orientation = portrait
 fullscreen = 0
 
+android.permissions = INTERNET
+
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
 android.archs = arm64-v8a, armeabi-v7a
 android.accept_sdk_license = True
-android.permissions =
-
-p4a.branch = v2024.01.21
+android.release_artifact = apk
+android.debug_artifact = apk
 
 [buildozer]
+
 log_level = 2
 warn_on_root = 1
