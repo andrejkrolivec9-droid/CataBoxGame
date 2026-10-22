@@ -7,6 +7,8 @@ package.domain = org.catabox
 source.dir = .
 source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,txt,db
 
+icon.filename = %(source.dir)s/CataBox_icon.png
+
 version = 0.1
 
 requirements = python3,hostpython3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
