@@ -1,4 +1,3 @@
-
 name: Build CataBox Release APK
 
 on:
@@ -46,16 +45,23 @@ jobs:
 
       - name: Check source files
         run: |
+          set -e
           test -f main.py || {
             echo "ERROR: main.py is missing"
             exit 1
           }
-          test -f buildozer.spec
-          test -f CataBox_icon.png
-          test -f bg.jpg
+          test -f buildozer.spec || {
+            echo "ERROR: buildozer.spec is missing"
+            exit 1
+          }
+          test -f CataBox_icon.png || {
+            echo "ERROR: CataBox_icon.png is missing"
+            exit 1
+          }
 
       - name: Check Buildozer configuration
         run: |
+          set -e
           grep -E '^[[:space:]]*(version|android.numeric_version)[[:space:]]*=' buildozer.spec
 
       - name: Check keystore
@@ -64,6 +70,12 @@ jobs:
             echo "ERROR: Release keystore is missing"
             exit 1
           fi
+          if [ -z "$SIGN_PASSWORD" ]; then
+            echo "ERROR: SIGN_PASSWORD secret is missing"
+            exit 1
+          fi
+        env:
+          SIGN_PASSWORD: ${{ secrets.SIGN_PASSWORD }}
 
       - name: Build signed release APK
         env:
@@ -123,20 +135,28 @@ jobs:
       - name: Verify APK signature
         run: |
           set -e
+          found=0
           for apk in bin/*.apk; do
-            test -f "$apk"
+            if [ ! -f "$apk" ]; then
+              continue
+            fi
+            found=1
             if [[ "$apk" == *unsigned* ]]; then
               echo "ERROR: Unsigned APK: $apk"
               exit 1
             fi
             jarsigner -verify "$apk"
           done
+          if [ "$found" -eq 0 ]; then
+            echo "ERROR: No APK found for signature verification"
+            exit 1
+          fi
 
       - name: Upload APK artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CataBox-4.0.6-release-apk
+          name: CataBox-4.0.7-release-apk
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
