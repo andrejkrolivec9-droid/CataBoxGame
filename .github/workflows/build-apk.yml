@@ -1,3 +1,4 @@
+
 name: Build CataBox Release APK
 
 on:
@@ -43,20 +44,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "buildozer==1.5.0" "cython==0.29.36"
 
-      - name: Prepare main.py
+      - name: Check source files
         run: |
-          if [ ! -f main.py ]; then
-            if [ -f Desktop-7.py ]; then
-              cp Desktop-7.py main.py
-            else
-              echo "ERROR: main.py and Desktop-7.py are missing"
-              exit 1
-            fi
-          fi
+          test -f main.py || {
+            echo "ERROR: main.py is missing"
+            exit 1
+          }
+          test -f buildozer.spec
+          test -f CataBox_icon.png
+          test -f bg.jpg
 
       - name: Check Buildozer configuration
         run: |
-          test -f buildozer.spec
           grep -E '^[[:space:]]*(version|android.numeric_version)[[:space:]]*=' buildozer.spec
 
       - name: Check keystore
@@ -86,15 +85,19 @@ jobs:
           spec = open("buildozer.spec", encoding="utf-8").read()
 
           def get(key):
-              m = re.search(rf"^\s*{re.escape(key)}\s*=\s*(\S+)", spec, re.MULTILINE)
+              m = re.search(
+                  rf"^\s*{re.escape(key)}\s*=\s*(\S+)",
+                  spec,
+                  re.MULTILINE
+              )
               if not m:
-                  raise SystemExit(f"ERROR: '{key}' not found in buildozer.spec")
+                  raise SystemExit(f"ERROR: '{key}' not found")
               return m.group(1)
 
           expected_name = get("version")
           expected_code = int(get("android.numeric_version"))
-
           files = glob.glob("bin/*.apk")
+
           if not files:
               raise SystemExit("ERROR: No APK found")
 
@@ -104,26 +107,24 @@ jobs:
               code = int(apk.get_androidversion_code())
 
               print("APK:", path)
-              print("Version name:", name)
+              print("Version:", name)
               print("Version code:", code)
 
               if name != expected_name:
                   raise SystemExit(
-                      f"ERROR: Expected version name {expected_name}, got {name}"
+                      f"Expected {expected_name}, got {name}"
                   )
               if code != expected_code:
                   raise SystemExit(
-                      f"ERROR: Expected version code {expected_code}, got {code}"
+                      f"Expected {expected_code}, got {code}"
                   )
           PY
 
       - name: Verify APK signature
         run: |
+          set -e
           for apk in bin/*.apk; do
-            if [ ! -f "$apk" ]; then
-              echo "ERROR: APK not found"
-              exit 1
-            fi
+            test -f "$apk"
             if [[ "$apk" == *unsigned* ]]; then
               echo "ERROR: Unsigned APK: $apk"
               exit 1
@@ -135,7 +136,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CataBox-0.2.1-release-apk
+          name: CataBox-4.0.6-release-apk
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
