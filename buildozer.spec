@@ -1,36 +1,22 @@
-
 [app]
-
 title = CataBox
 package.name = catabox
 package.domain = org.catabox
-
 source.dir = .
-source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,txt,db
+source.include_exts = py,png,jpg,jpeg,kv,atlas,wav,mp3,ogg,ttf,json
+version = 1.0
 
-icon.filename = %(source.dir)s/CataBox_icon.png
-
-version = 0.2
-android.numeric_version = 10212
-
-requirements = python3,hostpython3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
+requirements = python3,kivy,pyjnius,android,sqlite3,openssl,certifi
 
 orientation = portrait
 fullscreen = 0
 
-android.permissions = INTERNET
-
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
 android.archs = arm64-v8a, armeabi-v7a
 android.accept_sdk_license = True
-android.release_artifact = apk
-android.debug_artifact = apk
-
-p4a.branch = v2024.01.21
 
 [buildozer]
-
 log_level = 2
 warn_on_root = 1
