@@ -1,3 +1,4 @@
+
 name: Build CataBox Release APK
 
 on:
@@ -56,16 +57,13 @@ jobs:
 
       - name: Check Buildozer configuration
         run: |
-          if [ ! -f buildozer.spec ]; then
-            echo "ERROR: buildozer.spec is missing"
-            exit 1
-          fi
-          grep -E '^[[:space:]]*(package\.name|package\.domain|version|android\.release_artifact|android\.debug_artifact)[[:space:]]*=' buildozer.spec || true
+          test -f buildozer.spec
+          grep -E '^[[:space:]]*(version|android.numeric_version)[[:space:]]*=' buildozer.spec
 
       - name: Check keystore
         run: |
           if [ ! -f signing/catabox-release.keystore ]; then
-            echo "ERROR: signing/catabox-release.keystore not found. Run 'Create keystore' first."
+            echo "ERROR: Release keystore is missing"
             exit 1
           fi
 
@@ -78,24 +76,54 @@ jobs:
         run: |
           buildozer -v android release
 
-      - name: Show generated APK files
-        if: always()
+      - name: Verify APK version
         run: |
-          echo "Files in bin/:"
-          ls -lah bin/ || true
+          python -m pip install androguard
+          python - <<'PY'
+          import glob
+          from androguard.core.apk import APK
 
-      - name: Fail if APK is unsigned
+          files = glob.glob("bin/*.apk")
+          if not files:
+              raise SystemExit("ERROR: No APK found")
+
+          for path in files:
+              apk = APK(path)
+              name = apk.get_androidversion_name()
+              code = int(apk.get_androidversion_code())
+
+              print("APK:", path)
+              print("Version name:", name)
+              print("Version code:", code)
+
+              if name != "0.2":
+                  raise SystemExit("ERROR: Expected version name 0.2")
+
+              if code <= 10211:
+                  raise SystemExit(
+                      "ERROR: Version code must be greater than 10211"
+                  )
+          PY
+
+      - name: Verify APK signature
         run: |
-          if ls bin/*unsigned* 1>/dev/null 2>&1; then
-            echo "ERROR: APK is unsigned"
-            exit 1
-          fi
+          for apk in bin/*.apk; do
+            if [ ! -f "$apk" ]; then
+              echo "ERROR: APK not found"
+              exit 1
+            fi
+            if [[ "$apk" == *unsigned* ]]; then
+              echo "ERROR: Unsigned APK: $apk"
+              exit 1
+            fi
+            jarsigner -verify "$apk"
+          done
 
       - name: Upload APK artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: CataBox-release-apk
+          name: CataBox-0.2-release-apk
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
