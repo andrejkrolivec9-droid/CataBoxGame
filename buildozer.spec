@@ -12,7 +12,7 @@ icon.filename = %(source.dir)s/CataBox_icon.png
 version = 4.0.8
 android.numeric_version = 40800
 
-requirements = python3,hostpython3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
+requirements = python3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,six,setuptools
 
 orientation = portrait
 fullscreen = 1
