@@ -1,78 +1,92 @@
 name: Build CataBox Release APK
 
 on:
-workflow_dispatch:
-push:
-branches:
-- main
-- master
-paths-ignore:
-- 'signing/**'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - 'signing/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-build:
-runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
 
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  - name: Check source files
-    shell: bash
-    run: |
-      set -e
-      test -f main.py || { echo "ERROR: main.py missing"; exit 1; }
-      test -f buildozer.spec || { echo "ERROR: buildozer.spec missing"; exit 1; }
-      test -f CataBox_icon.png || { echo "ERROR: CataBox_icon.png missing"; exit 1; }
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
 
-  - name: Set up Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: '3.10'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Set up Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git zip unzip \
+            autoconf automake libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
+            cmake libffi-dev libssl-dev libltdl-dev
 
-  - name: Install system dependencies
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y git zip unzip autoconf libtool pkg-config \
-        zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
-        cmake libffi-dev libssl-dev
+      - name: Install Buildozer
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "buildozer==1.5.0" "cython==0.29.36"
 
-  - name: Install Buildozer
-    run: |
-      python -m pip install --upgrade pip
-      python -m pip install "buildozer==1.5.0" "cython==0.29.36"
+      - name: Cache Buildozer and Android SDK/NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+            .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
 
-  - name: Check release signing credentials
-    env:
-      SIGN_PASSWORD: ${{ secrets.SIGN_PASSWORD }}
-    run: |
-      test -f signing/catabox-release.keystore || {
-        echo "ERROR: Release keystore is missing"
-        exit 1
-      }
-      test -n "$SIGN_PASSWORD" || {
-        echo "ERROR: SIGN_PASSWORD secret is missing"
-        exit 1
-      }
+      - name: Check source files
+        run: |
+          set -e
+          for f in main.py buildozer.spec CataBox_icon.png; do
+            test -f "$f" || { echo "ERROR: $f is missing"; exit 1; }
+          done
 
-  - name: Build signed release APK
-    env:
-      P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/signing/catabox-release.keystore
-      P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.SIGN_PASSWORD }}
-      P4A_RELEASE_KEYALIAS: catabox
-      P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.SIGN_PASSWORD }}
-    run: buildozer -v android release
+      - name: Check release signing credentials
+        env:
+          SIGN_PASSWORD: ${{ secrets.SIGN_PASSWORD }}
+        run: |
+          test -f signing/catabox-release.keystore || { echo "ERROR: Keystore is missing"; exit 1; }
+          test -n "$SIGN_PASSWORD" || { echo "ERROR: SIGN_PASSWORD secret is missing"; exit 1; }
 
-  - name: Upload APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: CataBox-4.0.8-release-apk
-      path: bin/*release*.apk
-      if-no-files-found: error
-      retention-days: 14
+      - name: Build signed release APK
+        env:
+          P4A_RELEASE_KEYSTORE: ${{ github.workspace }}/signing/catabox-release.keystore
+          P4A_RELEASE_KEYSTORE_PASSWD: ${{ secrets.SIGN_PASSWORD }}
+          P4A_RELEASE_KEYALIAS: catabox
+          P4A_RELEASE_KEYALIAS_PASSWD: ${{ secrets.SIGN_PASSWORD }}
+        run: buildozer -v android release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CataBox-4.0.8-release-apk
+          path: bin/*.apk
+          if-no-files-found: error
+          retention-days: 14
