@@ -9,8 +9,8 @@ source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,db,t
 
 icon.filename = %(source.dir)s/CataBox_icon.png
 
-version = 4.0.7
-android.numeric_version = 40700
+version = 4.0.8
+android.numeric_version = 40800
 
 requirements = python3,hostpython3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
 
