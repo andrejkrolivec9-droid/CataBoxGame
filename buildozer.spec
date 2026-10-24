@@ -15,7 +15,7 @@ android.numeric_version = 40800
 requirements = python3,hostpython3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,sqlite3,six,setuptools,libffi,openssl,sdl2_image,sdl2_mixer,sdl2_ttf
 
 orientation = portrait
-fullscreen = 0
+fullscreen = 1
 
 android.permissions = INTERNET
 
