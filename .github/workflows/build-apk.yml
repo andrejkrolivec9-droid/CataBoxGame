@@ -63,15 +63,15 @@ jobs:
       - name: Check source files
         run: |
           set -e
-          if [ ! -f CataBox_icon.png ]; then
-            alt=$(ls CataBox_icon-*.png 2>/dev/null | head -n 1 || true)
-            if [ -n "$alt" ]; then
-              cp "$alt" CataBox_icon.png
-            fi
-          fi
-          for f in main.py buildozer.spec CataBox_icon.png; do
+          for f in main.py buildozer.spec; do
             test -f "$f" || { echo "ERROR: $f is missing"; exit 1; }
           done
+          icon=$(grep -E '^icon.filename' buildozer.spec | head -n 1 | sed 's/.*=[[:space:]]*//' | sed 's#%(source.dir)s/##' | tr -d '\r ')
+          echo "Icon from spec: $icon"
+          if [ -z "$icon" ] || [ ! -f "$icon" ]; then
+            echo "ERROR: icon file '$icon' from buildozer.spec is missing in the repository"
+            exit 1
+          fi
 
       - name: Check release signing credentials
         env:
@@ -91,7 +91,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CataBox-4.5.0-release-apk
+          name: CataBox-release-apk
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
