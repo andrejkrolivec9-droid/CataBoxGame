@@ -63,8 +63,11 @@ jobs:
       - name: Check source files
         run: |
           set -e
-          if [ ! -f CataBox_icon.png ] && [ -f CataBox_icon-1.png ]; then
-            mv CataBox_icon-1.png CataBox_icon.png
+          if [ ! -f CataBox_icon.png ]; then
+            alt=$(ls CataBox_icon-*.png 2>/dev/null | head -n 1 || true)
+            if [ -n "$alt" ]; then
+              cp "$alt" CataBox_icon.png
+            fi
           fi
           for f in main.py buildozer.spec CataBox_icon.png; do
             test -f "$f" || { echo "ERROR: $f is missing"; exit 1; }
@@ -88,7 +91,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CataBox-4.0.8-release-apk
+          name: CataBox-4.5.0-release-apk
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
