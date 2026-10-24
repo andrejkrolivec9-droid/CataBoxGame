@@ -54,7 +54,7 @@ jobs:
             echo "ERROR: buildozer.spec is missing"
             exit 1
           }
-          test -f CataBox_icon.png || {
+          test -f CataBox_icon-1.png || {
             echo "ERROR: CataBox_icon-1.png is missing"
             exit 1
           }
