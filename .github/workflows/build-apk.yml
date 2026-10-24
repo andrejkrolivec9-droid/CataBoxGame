@@ -63,6 +63,9 @@ jobs:
       - name: Check source files
         run: |
           set -e
+          if [ ! -f CataBox_icon.png ] && [ -f CataBox_icon-1.png ]; then
+            mv CataBox_icon-1.png CataBox_icon.png
+          fi
           for f in main.py buildozer.spec CataBox_icon.png; do
             test -f "$f" || { echo "ERROR: $f is missing"; exit 1; }
           done
