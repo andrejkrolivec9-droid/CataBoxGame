@@ -1,7 +1,7 @@
 [app]
 
-title = CataBox
-package.name = catabox
+title = CataBox Admin
+package.name = cataboxadmin
 package.domain = org.catabox
 
 source.dir = .
@@ -9,8 +9,8 @@ source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,db,t
 
 icon.filename = %(source.dir)s/icons.png
 
-version = 4.5.0
-android.numeric_version = 45000
+version = 1.1.0
+android.numeric_version = 11000
 
 requirements = python3,kivy,pyjnius,android,requests,urllib3,chardet,certifi,idna,six,setuptools
 
