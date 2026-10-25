@@ -7,7 +7,7 @@ package.domain = org.catabox
 source.dir = .
 source.include_exts = py,png,jpg,jpeg,gif,kv,atlas,ttf,otf,wav,mp3,ogg,json,db,txt
 
-icon.filename = %(source.dir)s/icon_night.png
+icon.filename = %(source.dir)s/icons.png
 
 version = 4.5.0
 android.numeric_version = 45000
